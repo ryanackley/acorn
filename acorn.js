@@ -338,44 +338,55 @@
   // predicate from a space-separated string of words.
   //
   // It starts by sorting the words by length.
+  // function makePredicate(words) {
+  //   words = words.split(" ");
+  //   var f = "", cats = [];
+  //   out: for (var i = 0; i < words.length; ++i) {
+  //     for (var j = 0; j < cats.length; ++j)
+  //       if (cats[j][0].length == words[i].length) {
+  //         cats[j].push(words[i]);
+  //         continue out;
+  //       }
+  //     cats.push([words[i]]);
+  //   }
+  //   function compareTo(arr) {
+  //     if (arr.length == 1) return f += "return str === " + JSON.stringify(arr[0]) + ";";
+  //     f += "switch(str){";
+  //     for (var i = 0; i < arr.length; ++i) f += "case " + JSON.stringify(arr[i]) + ":";
+  //     f += "return true}return false;";
+  //   }
 
-  function makePredicate(words) {
-    words = words.split(" ");
-    var f = "", cats = [];
-    out: for (var i = 0; i < words.length; ++i) {
-      for (var j = 0; j < cats.length; ++j)
-        if (cats[j][0].length == words[i].length) {
-          cats[j].push(words[i]);
-          continue out;
-        }
-      cats.push([words[i]]);
+  //   // When there are more than three length categories, an outer
+  //   // switch first dispatches on the lengths, to save on comparisons.
+
+  //   if (cats.length > 3) {
+  //     cats.sort(function(a, b) {return b.length - a.length;});
+  //     f += "switch(str.length){";
+  //     for (var i = 0; i < cats.length; ++i) {
+  //       var cat = cats[i];
+  //       f += "case " + cat[0].length + ":";
+  //       compareTo(cat);
+  //     }
+  //     f += "}";
+
+  //   // Otherwise, simply generate a flat `switch` statement.
+
+  //   } else {
+  //     compareTo(words);
+  //   }
+  //   return new Function("str", f);
+  // }
+  var makePredicate = function(words){
+    var words = words.split(" ");
+    var regexString = "^" + words[0] + "$";
+    for (var i = 1; i < words.length; i++){
+      regexString += ("|^" + words[i] + "$");
     }
-    function compareTo(arr) {
-      if (arr.length == 1) return f += "return str === " + JSON.stringify(arr[0]) + ";";
-      f += "switch(str){";
-      for (var i = 0; i < arr.length; ++i) f += "case " + JSON.stringify(arr[i]) + ":";
-      f += "return true}return false;";
+    var regex = new RegExp(regexString);
+
+    return function(str){
+      return regex.test(str);
     }
-
-    // When there are more than three length categories, an outer
-    // switch first dispatches on the lengths, to save on comparisons.
-
-    if (cats.length > 3) {
-      cats.sort(function(a, b) {return b.length - a.length;});
-      f += "switch(str.length){";
-      for (var i = 0; i < cats.length; ++i) {
-        var cat = cats[i];
-        f += "case " + cat[0].length + ":";
-        compareTo(cat);
-      }
-      f += "}";
-
-    // Otherwise, simply generate a flat `switch` statement.
-
-    } else {
-      compareTo(words);
-    }
-    return new Function("str", f);
   }
 
   // The ECMAScript 3 reserved word list.
@@ -1009,7 +1020,7 @@
 
   function isUseStrict(stmt) {
     return options.ecmaVersion >= 5 && stmt.type === "ExpressionStatement" &&
-      stmt.expression.type === "Literal" && stmt.expression.value === "use strict";
+      stmt.expression.type === "Literal" && "use strict" === stmt.expression.value;
   }
 
   // Predicate that tests whether the next token is of the given
